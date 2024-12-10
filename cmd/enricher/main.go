@@ -6,7 +6,8 @@ import (
 	"enricher/internal/enricher/cache"
 	"enricher/internal/enricher/dto"
 	"enricher/internal/enricher/executors"
-	"enricher/internal/handlers"
+	"enricher/internal/server/handlers"
+	"enricher/internal/server/middlewares"
 	"flag"
 	"fmt"
 	"log"
@@ -44,7 +45,7 @@ func run(configPath string) error {
 
 	enricherExecutorService := getExecutorService(cacheClient, enrichers)
 
-	if err := startServer(*appConfig.Server, enricherExecutorService); err != nil {
+	if err := startServer(*appConfig.Server, *appConfig.API, enricherExecutorService); err != nil {
 		return fmt.Errorf("server error: %w", err)
 	}
 
@@ -81,15 +82,19 @@ func getEnrichers(config configs.EnrichersConfig) (map[dto.EnricherArgType][]dto
 	return enrichers, nil
 }
 
-func startServer(config configs.ServerConfig, executorService executors.EnricherExecutorService) error {
+func startServer(config configs.ServerConfig, apiConfig configs.APIConfig, executorService executors.EnricherExecutorService) error {
 	log.Println("Configuring server...")
 
-	http.HandleFunc("/enrichment", func(response http.ResponseWriter, request *http.Request) {
+	enrichmentHandler := http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		handlers.Enrichment(response, request, executorService)
 	})
 
+	authEnrichmentHandler := middlewares.AuthMiddleware(enrichmentHandler, apiConfig)
+
+	http.Handle("/enrichment", authEnrichmentHandler)
+
 	serverHost := fmt.Sprintf("%s:%d", config.Host, config.Port)
-	fmt.Printf("Starting server %s...", serverHost)
+	fmt.Printf("Starting server %s...\n", serverHost)
 	err := http.ListenAndServe(serverHost, nil)
 
 	return err

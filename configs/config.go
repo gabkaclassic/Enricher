@@ -11,6 +11,7 @@ type Config struct {
 	Enrichers *EnrichersConfig
 	Server    *ServerConfig
 	Cache     *CacheConfig
+	API       *APIConfig
 }
 
 type ServerConfig struct {
@@ -23,9 +24,18 @@ type EnrichersConfig struct {
 }
 
 type CacheConfig struct {
-	Address string
+	Address  string
 	Password string
-	Db int
+	Db       int
+}
+
+type APIKey struct {
+	Name string
+	Key  string
+}
+
+type APIConfig struct {
+	Keys []APIKey
 }
 
 func loadConfig(filePath string) (*Config, error) {
