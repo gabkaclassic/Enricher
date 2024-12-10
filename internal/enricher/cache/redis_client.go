@@ -20,16 +20,16 @@ func NewRedisCacheClient(address string, password string, db int) *RedisCacheCli
 	return &RedisCacheClient{client: rdb}
 }
 
-func (cache *RedisCacheClient) Get(key string) ([]byte, error) {
+func (cache *RedisCacheClient) Get(key string) (interface{}, error) {
 
 	ctx := context.Background()
 
-	stringValue, err := cache.client.Get(ctx, key).Result()
+	value, err := cache.client.Get(ctx, key).Bytes()
 
-	return []byte(stringValue), err
+	return value, err
 }
 
-func (cache *RedisCacheClient) Set(key string, value []byte) error {
+func (cache *RedisCacheClient) Set(key string, value interface{}) error {
 
 	ctx := context.Background()
 
@@ -37,7 +37,7 @@ func (cache *RedisCacheClient) Set(key string, value []byte) error {
 	return err
 }
 
-func (cache *RedisCacheClient) SetWithTTL(key string, value []byte, ttl int) error {
+func (cache *RedisCacheClient) SetWithTTL(key string, value interface{}, ttl int) error {
 
 	ctx := context.Background()
 

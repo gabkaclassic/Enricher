@@ -11,7 +11,7 @@ type InMemoryCacheClient struct {
 }
 
 type CacheItem struct {
-	Value      []byte
+	Value      interface{}
 	Expiration time.Time
 }
 
@@ -20,7 +20,7 @@ func NewInMemoryCacheClient() *InMemoryCacheClient {
 	return &InMemoryCacheClient{}
 }
 
-func (cache *InMemoryCacheClient) Get(key string) ([]byte, error) {
+func (cache *InMemoryCacheClient) Get(key string) (interface{}, error) {
 
 	value, exists := cache.memory.Load(key)
 
@@ -39,7 +39,7 @@ func (cache *InMemoryCacheClient) Get(key string) ([]byte, error) {
 	return entry.Value, nil
 }
 
-func (cache *InMemoryCacheClient) Set(key string, value []byte) error {
+func (cache *InMemoryCacheClient) Set(key string, value interface{}) error {
 
 	cache.memory.Store(key, CacheItem{
 		Value:      value,
@@ -49,7 +49,7 @@ func (cache *InMemoryCacheClient) Set(key string, value []byte) error {
 	return nil
 }
 
-func (cache *InMemoryCacheClient) SetWithTTL(key string, value []byte, ttl int) error {
+func (cache *InMemoryCacheClient) SetWithTTL(key string, value interface{}, ttl int) error {
 
 	cache.memory.Store(key, CacheItem{
 		Value:      value,

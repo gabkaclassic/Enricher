@@ -24,13 +24,6 @@ func (executor EnricherExecutorService) getEnrichmentResultCacheKey(enricher dto
 	return fmt.Sprintf("%s-%v-%s", enricher.Name, data.Data, data.DataType)
 }
 
-func (executor EnricherExecutorService) encodeCacheValue(data interface{}) ([]byte, error) {
-
-	value, err := json.Marshal(data)
-
-	return value, err
-}
-
 func (executor EnricherExecutorService) decodeEnrichmentResult(data []byte) (dto.EnricherResult, error) {
 
 	var result dto.EnricherResult
@@ -39,14 +32,20 @@ func (executor EnricherExecutorService) decodeEnrichmentResult(data []byte) (dto
 	return result, err
 }
 
+func (executor EnricherExecutorService) encodeEnrichmentResult(data interface{}) (interface{}, error) {
+
+	value, err := json.Marshal(data)
+
+	return value, err
+}
+
 func (executor EnricherExecutorService) putEnrichmentResultToCache(enricher dto.Enricher, data dto.EnricherInputData, result dto.EnricherResult) error {
 
 	cacheKey := executor.getEnrichmentResultCacheKey(enricher, data)
-	cacheValue, err := executor.encodeCacheValue(result.Report)
+	cacheValue, err := executor.encodeEnrichmentResult(result)
 
 	if err != nil {
-		log.Printf("Encode enrichment result error: %v", err)
-		return err
+		return fmt.Errorf("encoding enrichment result error: %v", err)
 	}
 
 	err = executor.cacheClient.SetWithTTL(
@@ -69,7 +68,7 @@ func (executor EnricherExecutorService) getEnrichmentResultFromCache(enricher dt
 		return dto.EnricherResult{}, err
 	}
 
-	result, err := executor.decodeEnrichmentResult(value)
+	result, err := executor.decodeEnrichmentResult(value.([]byte))
 
 	if err != nil {
 		log.Printf("Decode enrichment result error: %v", err)
@@ -108,7 +107,10 @@ func (executor EnricherExecutorService) ExecuteEnrichers(enricherData dto.Enrich
 		} else {
 			results = append(results, parallelResults...)
 			for i, enricher := range enrichersToExecute {
-				executor.putEnrichmentResultToCache(enricher, enricherData, parallelResults[i])
+				err := executor.putEnrichmentResultToCache(enricher, enricherData, parallelResults[i])
+				if err != nil {
+					log.Printf("Error putting enrichment result to cache: %v", err)
+				}
 			}
 		}
 	}
