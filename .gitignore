@@ -1,5 +1,5 @@
 .idea
 .gigaide
 configs/*.yml
-./enricher
+enricher_app
 enrichers/*
