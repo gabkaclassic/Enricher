@@ -5,6 +5,7 @@ import (
 	"enricher/internal/enricher/dto"
 	"enricher/internal/enricher/cache"
 	"fmt"
+	"errors"
     "log"
 	"encoding/json"
 )
@@ -86,7 +87,7 @@ func (executor EnricherExecutorService) ExecuteEnrichers(enricherData dto.Enrich
     allowedEnrichersList, exists := executor.enrichers[enricherData.DataType]
     if !exists {
         errorMessage := fmt.Sprintf("Enricher for data type %s not found", string(enricherData.DataType))
-        return []dto.EnricherResult{}, fmt.Errorf(errorMessage)
+        return []dto.EnricherResult{}, errors.New(errorMessage)
     }
 
     enabledEnrichers := getEnabledEnrichers(allowedEnrichersList)

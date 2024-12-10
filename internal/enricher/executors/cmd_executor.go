@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"enricher/internal/enricher/cache"
 	"enricher/internal/enricher/dto"
-	"fmt"
 	"log"
 	"os/exec"
 )
@@ -24,12 +23,8 @@ func NewEnricherCmdExecutorService(cacheClient *cache.CacheClient, enrichers map
 func CmdExecute(enricher dto.Enricher, enricherData dto.EnricherInputData) (dto.EnricherResult, error) {
 	log.Printf("Execute enricher: %s", enricher.Name)
 	path := enricher.ExecutablePath
-	args := make([]string, 0, len(enricherData.Data))
-	for key, value := range enricherData.Data {
-		args = append(args, fmt.Sprintf("%s=%v", key, value))
-	}
-
-	cmd := exec.Command(path, args...)
+	
+	cmd := exec.Command(path, enricherData.Data)
 
 	output, err := cmd.CombinedOutput()
 
