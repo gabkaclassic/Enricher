@@ -22,8 +22,8 @@ func main() {
 	err := run(*configPath)
 
 	if err != nil {
-			log.Println("Enricher service emergency stopped")
-			panic(err)
+		log.Println("Enricher service emergency stopped")
+		panic(err)
 	}
 
 	log.Println("Enricher service stopped successfully")
@@ -32,7 +32,7 @@ func main() {
 func run(configPath string) error {
 	appConfig, err := getConfigs(configPath)
 	if err != nil {
-			return fmt.Errorf("failed to load configs: %w", err)
+		return fmt.Errorf("failed to load configs: %w", err)
 	}
 
 	enrichers, err := getEnrichers(*appConfig.Enrichers)
@@ -41,16 +41,16 @@ func run(configPath string) error {
 	}
 
 	cacheClient := getCacheClient(*appConfig.Cache)
-	
+
 	enricherExecutorService := getExecutorService(cacheClient, enrichers)
-	
+
 	if err := startServer(*appConfig.Server, enricherExecutorService); err != nil {
-			return fmt.Errorf("server error: %w", err)
+		return fmt.Errorf("server error: %w", err)
 	}
 
 	return nil
 }
-	
+
 func getConfigs(configPath string) (configs.Config, error) {
 
 	log.Println("Loading config...")
@@ -58,14 +58,14 @@ func getConfigs(configPath string) (configs.Config, error) {
 	appConfig, err := configManager.GetConfig(configPath)
 
 	if err != nil {
-			log.Printf("Error while config load: %v", err)
-			return configs.Config{}, err
+		log.Printf("Error while config load: %v", err)
+		return configs.Config{}, err
 	}
 	log.Println("Configs loaded successfully")
 
 	return *appConfig, nil
 }
-	
+
 func getEnrichers(config configs.EnrichersConfig) (map[dto.EnricherArgType][]dto.Enricher, error) {
 	log.Println("Loading enrichers...")
 	enricherManager := enricher.NewEnricherManager()
@@ -73,19 +73,19 @@ func getEnrichers(config configs.EnrichersConfig) (map[dto.EnricherArgType][]dto
 	enrichers, err := enricherManager.GetEnrichers(config.Path)
 
 	if err != nil {
-			log.Printf("Error while enrichers load: %v", err)
-			return nil, err
+		log.Printf("Error while enrichers load: %v", err)
+		return nil, err
 	}
 	log.Println("Configs loaded successfully")
 
 	return enrichers, nil
 }
-	
+
 func startServer(config configs.ServerConfig, executorService executors.EnricherExecutorService) error {
 	log.Println("Configuring server...")
 
 	http.HandleFunc("/enrichment", func(response http.ResponseWriter, request *http.Request) {
-			handlers.Enrichment(response, request, executorService)
+		handlers.Enrichment(response, request, executorService)
 	})
 
 	serverHost := fmt.Sprintf("%s:%d", config.Host, config.Port)
@@ -95,20 +95,24 @@ func startServer(config configs.ServerConfig, executorService executors.Enricher
 	return err
 }
 
-func getCacheClient(config configs.CacheConfig) (cache.CacheClient) {
+func getCacheClient(config configs.CacheConfig) cache.CacheClient {
 	log.Println("Creating cache client...")
+
+	if config.Address == "" {
+		return cache.NewInMemoryCacheClient()
+	}
 	return cache.NewRedisCacheClient(
-		config.Address, 
-		config.Password, 
+		config.Address,
+		config.Password,
 		config.Db,
 	)
 }
 
-func getExecutorService(cacheClient cache.CacheClient, enrichers  map[dto.EnricherArgType][]dto.Enricher) (executors.EnricherExecutorService) {
+func getExecutorService(cacheClient cache.CacheClient, enrichers map[dto.EnricherArgType][]dto.Enricher) executors.EnricherExecutorService {
 	log.Println("Creating enrichers executor service...")
-	
+
 	return executors.EnricherExecutorService(*executors.NewEnricherCmdExecutorService(
 		&cacheClient,
-        enrichers,
+		enrichers,
 	))
 }
