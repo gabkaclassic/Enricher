@@ -65,7 +65,7 @@ func (executor EnricherExecutorService) getEnrichmentResultFromCache(enricher dt
 	value, err := executor.cacheClient.Get(cacheKey)
 
 	if err != nil {
-		log.Printf("Get enrichemnt result from cache error: %v", err)
+		log.Printf("Get enrichment result from cache error: %v", err)
 		return dto.EnricherResult{}, err
 	}
 
