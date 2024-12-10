@@ -12,8 +12,8 @@ type EnricherCmdExecutorService EnricherExecutorService
 
 func NewEnricherCmdExecutorService(cacheClient *cache.CacheClient, enrichers map[dto.EnricherArgType][]dto.Enricher) *EnricherCmdExecutorService {
 	execService := &EnricherCmdExecutorService{
-		processor: CmdExecute,
-		enrichers: enrichers,
+		processor:   CmdExecute,
+		enrichers:   enrichers,
 		cacheClient: *cacheClient,
 	}
 
@@ -23,7 +23,7 @@ func NewEnricherCmdExecutorService(cacheClient *cache.CacheClient, enrichers map
 func CmdExecute(enricher dto.Enricher, enricherData dto.EnricherInputData) (dto.EnricherResult, error) {
 	log.Printf("Execute enricher: %s", enricher.Name)
 	path := enricher.ExecutablePath
-	
+
 	cmd := exec.Command(path, enricherData.Data)
 
 	output, err := cmd.CombinedOutput()
