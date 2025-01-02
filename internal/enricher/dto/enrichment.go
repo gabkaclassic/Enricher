@@ -10,7 +10,7 @@ const (
 )
 
 type EnricherInputData struct {
-	WebhookUri string
+	WebhookUri string `json:"uri"`
 	Data       string
 	DataType   EnricherArgType `json:"type"`
 }
